@@ -38,18 +38,18 @@ def fit_knn(y_train, window_param, window_type):
     else:
         k = window_param
 
-    classes = len(y_train.value_counts())
+    class_cnt = len(y_train.value_counts())
 
-    return window_type, h, k, classes
+    return window_type, h, k, class_cnt
 
-def predict_knn(X_test, X_train, y_train, w, window_type, h, k, kernel_type, metric_type, classes):
+def predict_knn(X_test, X_train, y_train, w, window_type, h, k, kernel_type, metric_type, class_cnt):
     kernel_func = get_kernel_function(kernel_type)
     predictions = []
-    all_distances, all_results, all_weights = find_neighbors(X_test, X_train, y_train, w, window_type, k, metric_type)
+    all_distances, all_results, all_weights = find_neighbors(X_test, X_train, y_train, w, window_type, h, k, metric_type)
 
     for x in range(len(X_test)):
         distances, classes, weights = all_distances[x], all_results[x], all_weights[x]
-        scores = [0 for _ in range(classes)]
+        scores = [0 for _ in range(class_cnt)]
 
         for i in range(len(distances) - 1):
             kernel_arg = distances[i] / (h if window_type == FIXED_WINDOW else distances[-1])
@@ -59,7 +59,7 @@ def predict_knn(X_test, X_train, y_train, w, window_type, h, k, kernel_type, met
 
     return predictions
 
-def find_neighbors(X_test, X_train, y_train, w, window_type, k, metric_type):
+def find_neighbors(X_test, X_train, y_train, w, window_type, h, k, metric_type):
     neighbors_count = k + 1 if window_type == VARIABLE_WINDOW else min(int(sqrt(len(X_train))), len(X_train) - 1)
     metric_name = {1: 'manhattan', 2: 'euclidean', 3: 'cosine'}[metric_type]
     nn = NearestNeighbors(n_neighbors=neighbors_count, metric=metric_name)
